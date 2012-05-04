@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/bin/env python
 # -*- coding: utf-8 *-*
 
 from time import strftime
@@ -6,7 +6,6 @@ import bz2
 import os
 import socket
 import subprocess
-import string
 from optparse import OptionParser
 
 parser = OptionParser()
