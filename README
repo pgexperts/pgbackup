@@ -1,0 +1,2 @@
+pgbackup is a python script for automating pg_dumps of all databases in a
+PostgreSQL cluster in the pg_dump custom format. It also dumps the globals.
