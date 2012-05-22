@@ -2,6 +2,7 @@
 # -*- coding: utf-8 *-*
 
 from time import strftime
+import tempfile
 import bz2
 import os
 import socket
@@ -27,6 +28,8 @@ parser.add_option('-c', "--compress", action="store", type="int",
 
 (options, args) = parser.parse_args()
 
+failed = 0
+
 # set up some environment variables either from the command line arguments,
 # from the environment or from reasonable defaults
 dbenv = {"PATH": os.environ["PATH"]}
@@ -42,21 +45,39 @@ dbhost = options.pghost or os.getenv("PGHOST") or socket.getfqdn()
 print dbhost
 print dbenv
 
-globalsfile = dbhost + '-globals-' + strftime('%Y%m%d') + '.sql.bz2'
+logfile = tempfile.TemporaryFile()
+
+globalsfile = options.backupdir + '/' + dbhost + '-globals-'\
+  + strftime('%Y%m%d') + '.sql.bz2'
 print globalsfile
 
 globals_out = bz2.BZ2File(globalsfile, 'wb')
-globals_in =  subprocess.Popen(["pg_dumpall", "--globals"],
-    stdout=subprocess.PIPE, env=dbenv)
+globals_in = subprocess.Popen(["pg_dumpall", "--globals"],
+    stdout=subprocess.PIPE, stderr=logfile, env=dbenv)
 globals_out.writelines(globals_in.stdout)
 globals_out.close()
 
 databases = subprocess.check_output(["psql", "--no-align", "--tuples-only",
     "--command",
-    "SELECT datname FROM pg_database WHERE datname NOT IN ('postgres',"
-    "'template0','template1')","postgres"], env=dbenv)
+    "SELECT datname FROM pg_database WHERE datname NOT IN ('postgres', "
+    "'template0','template1')", "postgres"], env=dbenv)
+
 
 for db in databases.split():
     print db
+    dbfile = options.backupdir + '/' + dbhost + '-' + db + '-'\
+      + strftime('%Y%m%d') + '.dmp'
+    print dbfile
+    pg_dump = ['pg_dump', '--format=custom',
+        '--compress=' + str(options.compress),
+        '--file=' + dbfile, db]
+    print pg_dump
+    dumpreturn = subprocess.call(pg_dump, stderr=logfile, env=dbenv)
+    if dumpreturn != 0:
+        failed = 1
 
-
+if failed:
+    print "dump failed"
+    logfile.seek(0)
+    for errorline in logfile:
+      print errorline
