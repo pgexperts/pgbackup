@@ -22,7 +22,7 @@
 #    BASIS, AND POSTGRESQL EXPERTS, INC. HAS NO OBLIGATIONS TO PROVIDE
 #    MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-from time import strftime,time
+from time import strftime, time
 import tempfile
 import bz2
 import os
@@ -33,7 +33,7 @@ from optparse import OptionParser
 parser = OptionParser()
 
 parser.add_option('-a', "--alertemail", action="store", type="string",
-                  dest="alertemail", default='admin@pgexperts.com')
+                  dest="alertemail", default='nobody@pgexperts.com')
 parser.add_option('-d', "--destdir", action="store", type="string",
                   dest="backupdir", default='/data/pg/backup/dumps')
 parser.add_option('-k', "--keep", action="store", type="int", dest="keep",
