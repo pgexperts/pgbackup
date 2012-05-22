@@ -25,6 +25,8 @@ parser.add_option('-p', "--port", action="store", type="string",
                   dest="pgport")
 parser.add_option('-c', "--compress", action="store", type="int",
                   dest="compress", default=6)
+parser.add_option('', "--debug", action="store_const", const=1,
+                  dest="debug", default=0)
 
 (options, args) = parser.parse_args()
 
@@ -42,14 +44,15 @@ dbenv["PGUSER"] = options.pguser or os.getenv("PGUSER") or "postgres"
 
 # hostname used for file naming convention
 dbhost = options.pghost or os.getenv("PGHOST") or socket.getfqdn()
-print dbhost
-print dbenv
+if options.debug:
+    print "DBHOST: " + dbhost
+    print "DBENV:" + str(dbenv)
 
 logfile = tempfile.TemporaryFile()
 
 globalsfile = options.backupdir + '/' + dbhost + '-globals-'\
   + strftime('%Y%m%d') + '.sql.bz2'
-print globalsfile
+if options.debug: print "GLOBALSFILE: " + globalsfile
 
 globals_out = bz2.BZ2File(globalsfile, 'wb')
 globals_in = subprocess.Popen(["pg_dumpall", "--globals"],
@@ -64,14 +67,14 @@ databases = subprocess.check_output(["psql", "--no-align", "--tuples-only",
 
 
 for db in databases.split():
-    print db
+    if options.debug: print "DB: " + db
     dbfile = options.backupdir + '/' + dbhost + '-' + db + '-'\
       + strftime('%Y%m%d') + '.dmp'
-    print dbfile
+    if options.debug: print "DBFILE: " + dbfile
     pg_dump = ['pg_dump', '--format=custom',
         '--compress=' + str(options.compress),
         '--file=' + dbfile, db]
-    print pg_dump
+    if options.debug: print "PG_DUMP: " + str(pg_dump)
     dumpreturn = subprocess.call(pg_dump, stderr=logfile, env=dbenv)
     if dumpreturn != 0:
         failed = 1
