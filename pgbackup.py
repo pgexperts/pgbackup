@@ -123,3 +123,5 @@ if failed:
     logfile.seek(0)
     for errorline in logfile:
       print errorline
+
+logfile.close()
