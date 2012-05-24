@@ -1,6 +1,0 @@
-{
-  "venv": "", 
-  "name": "pgbackup", 
-  "license": "GNU General Public License v3", 
-  "description": "PostgreSQL utility for automating pg_dump of all databases in a cluster and globals."
-}
