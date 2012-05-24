@@ -29,6 +29,8 @@ import os
 import socket
 import subprocess
 from optparse import OptionParser
+import smtplib
+from email.mime.text import MIMEText
 
 parser = OptionParser()
 
@@ -81,29 +83,39 @@ globals_in = subprocess.Popen(["pg_dumpall", "--globals"],
     stdout=subprocess.PIPE, stderr=logfile, env=dbenv)
 globals_out.writelines(globals_in.stdout)
 globals_out.close()
+if globals_in.poll() != 0:
+    print "Globals dump failed!"
+    failed = 1
+
 
 # Let's get a list of databases to dump
-databases = subprocess.check_output(["psql", "--no-align", "--tuples-only",
-    "--command",
-    "SELECT datname FROM pg_database WHERE datname NOT IN ('postgres', "
-    "'template0','template1')", "postgres"], env=dbenv)
+try: 
+    databases = subprocess.check_output(["psql", "--no-align", "--tuples-only",
+        "--command",
+        "SELECT datname FROM pg_database WHERE datname NOT IN ('postgres', "
+        "'template0','template1')", "postgres"], stderr=logfile, env=dbenv)
+except:
+    print "Couldn't get list of databases!"
+    failed = 1
+    databases = []
 
-# Now that we've got a list, let's get to work
-for db in databases.split():
-    if options.debug:
-        print "DB: " + db
-    dbfile = options.backupdir + '/' + dbhost + '-' + db + '-'\
-      + strftime('%Y%m%d') + '.dmp'
-    if options.debug:
-        print "DBFILE: " + dbfile
-    pg_dump = ['pg_dump', '--format=custom',
-        '--compress=' + str(options.compress),
-        '--file=' + dbfile, db]
-    if options.debug:
-        print "PG_DUMP: " + str(pg_dump)
-    dumpreturnvalue = subprocess.call(pg_dump, stderr=logfile, env=dbenv)
-    if dumpreturnvalue != 0:
-        failed = 1
+if databases:
+    # Now that we've got a list, let's get to work
+    for db in databases.split():
+        if options.debug:
+            print "DB: " + db
+        dbfile = options.backupdir + '/' + dbhost + '-' + db + '-'\
+          + strftime('%Y%m%d') + '.dmp'
+        if options.debug:
+            print "DBFILE: " + dbfile
+        pg_dump = ['pg_dump', '--format=custom',
+            '--compress=' + str(options.compress),
+            '--file=' + dbfile, db]
+        if options.debug:
+            print "PG_DUMP: " + str(pg_dump)
+        dumpreturnvalue = subprocess.call(pg_dump, stderr=logfile, env=dbenv)
+        if dumpreturnvalue != 0:
+            failed = 1
 
 #Cleanup old backups
 now = time()
@@ -119,9 +131,16 @@ for dumpfile in os.listdir(options.backupdir):
 # Print out the logfile which contains stderr from pg_dump
 # if we failed
 if failed:
-    print "dump failed"
+    if options.debug: 
+        print "dump failed"
     logfile.seek(0)
-    for errorline in logfile:
-      print errorline
+    msg = MIMEText('Error output follows:\n\n' + logfile.read() )
+    msg['Subject'] = dbhost + ' dumps failed ' + strftime('%Y%m%d')
+    msg['From'] = options.alertemail
+    msg['To'] = options.alertemail
+
+    s = smtplib.SMTP('localhost')
+    s.sendmail(options.alertemail, options.alertemail, msg.as_string())
+    s.quit()
 
 logfile.close()
