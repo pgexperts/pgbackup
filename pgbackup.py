@@ -83,7 +83,7 @@ globals_in = subprocess.Popen(["pg_dumpall", "--globals"],
     stdout=subprocess.PIPE, stderr=logfile, env=dbenv)
 globals_out.writelines(globals_in.stdout)
 globals_out.close()
-if globals_in.poll() != 0:
+if globals_in.wait() != 0:
     print "Globals dump failed!"
     failed = 1
 
