@@ -66,7 +66,7 @@ dbenv["PGPORT"] = options.pgport or os.getenv("PGPORT") or "5432"
 dbenv["PGUSER"] = options.pguser or os.getenv("PGUSER") or "postgres"
 
 # hostname used for file naming convention
-dbhost = options.pghost or os.getenv("PGHOST") or socket.getfqdn()
+dbhost = options.pghost or os.getenv("PGHOST") or socket.gethostname()
 if options.debug:
     print "DBHOST: " + dbhost
     print "DBENV:" + str(dbenv)
