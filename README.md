@@ -12,16 +12,16 @@ Requires Python 2.7+
 
 Usage: pgbackup.py [options]
 
-Options:
-  -h, --help            show this help message and exit
-  -a ALERTEMAIL, --alertemail=ALERTEMAIL
-  -d BACKUPDIR, --destdir=BACKUPDIR
-  -k KEEP, --keep=KEEP  
-  --pghost=PGHOST       
-  -U PGUSER, --pguser=PGUSER
-  -p PGPORT, --port=PGPORT
-  -c COMPRESS, --compress=COMPRESS
-  --debug    
+    Options:
+      -h, --help            show this help message and exit
+      -a ALERTEMAIL, --alertemail=ALERTEMAIL
+      -d BACKUPDIR, --destdir=BACKUPDIR
+      -k KEEP, --keep=KEEP  
+      --pghost=PGHOST       
+      -U PGUSER, --pguser=PGUSER
+      -p PGPORT, --port=PGPORT
+      -c COMPRESS, --compress=COMPRESS
+      --debug    
 
 LICENSE
 -------
